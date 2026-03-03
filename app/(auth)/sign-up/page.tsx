@@ -10,7 +10,7 @@ import FooterLink from "@/components/forms/FooterLink";
 import { signUpWithEmail } from "@/lib/actions/auth.actions";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import OpenDevSocietyBranding from "@/components/OpenDevSocietyBranding";
+import zhcodingzhBranding from "@/components/zhcodingzhBranding";
 import React from "react";
 
 const SignUp = () => {
@@ -68,7 +68,7 @@ const SignUp = () => {
                 <InputField
                     name="email"
                     label="Email"
-                    placeholder="opendevsociety@cc.cc"
+                    placeholder="your@email.com"
                     register={register}
                     error={errors.email}
                     validation={{
@@ -134,16 +134,6 @@ const SignUp = () => {
 
                 <FooterLink text="Already have an account?" linkText="Sign in" href="/sign-in" />
 
-                <OpenDevSocietyBranding outerClassName="mt-10 flex justify-center" />
-                <div className="mt-5 flex justify-center">
-                    <a href="https://peerlist.io/ravixalgorithm/project/openstock" target="_blank" rel="noreferrer">
-                        <img
-                            src="https://peerlist.io/api/v1/projects/embed/PRJH8OED7MBL9MGB9HRMKAKLM66KNN?showUpvote=true&theme=light"
-                            alt="OpenStock"
-                            style={{ width: 'auto', height: '72px' }}
-                        />
-                    </a>
-                </div>
             </form>
         </>
     )

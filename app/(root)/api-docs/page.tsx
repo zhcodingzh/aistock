@@ -17,8 +17,8 @@ import {
 } from 'lucide-react';
 
 export const metadata = {
-  title: 'API & Architecture | OpenStock',
-  description: 'Technical documentation for OpenStock architecture, AI integrations, and background jobs.',
+  title: 'API & Architecture | AIStock',
+  description: 'Technical documentation for AIStock architecture, AI integrations, and background jobs.',
 };
 
 export default function ApiDocsPage() {
@@ -28,16 +28,15 @@ export default function ApiDocsPage() {
       <section className="text-center space-y-6 pt-10">
         <div className="flex justify-center items-center gap-4 mb-8">
           <div className="bg-gray-800 p-3 rounded-2xl border border-gray-700 shadow-xl">
-            <img src="/assets/images/logo.png" alt="openstock" className="h-10 w-auto invert brightness-0" />
+            <img src="/assets/images/logo.png" alt="aistock" className="h-10 w-auto invert brightness-0" />
           </div>
           <span className="text-gray-600 text-2xl">+</span>
           <div className="bg-gray-800 p-3 rounded-2xl border border-gray-700 shadow-xl">
-            <img src="/assets/icons/siray.svg" alt="Siray" className="h-10 w-auto invert brightness-0" />
           </div>
         </div>
 
         <h1 className="text-4xl md:text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">
-          OpenStock Architecture
+          AIStock Architecture
         </h1>
         <p className="text-xl text-gray-400 max-w-2xl mx-auto leading-relaxed">
           A transparent look at the event-driven, multi-provider system powering your market insights.
@@ -45,7 +44,7 @@ export default function ApiDocsPage() {
 
         <div className="flex flex-wrap justify-center gap-3 pt-2">
           <Badge color="green">v1.0.0 Active</Badge>
-          <Badge color="purple">Gemini + Siray AI</Badge>
+          <Badge color="purple">Gemini AI</Badge>
           <Badge color="blue">Open Source AGPL-3.0</Badge>
         </div>
       </section>
@@ -86,11 +85,9 @@ export default function ApiDocsPage() {
               </div>
               <div>
                 <h3 className="text-white font-semibold flex items-center gap-2">
-                  Fallback: Siray.ai
                   <span className="text-[10px] bg-blue-500/10 text-blue-400 px-2 py-0.5 rounded-full border border-blue-500/20">Ultra 1.0</span>
                 </h3>
                 <p className="text-sm text-gray-500 mt-1">
-                  Instant failover protection. If Gemini wavers, Siray takes over to ensure zero dropped requests.
                 </p>
               </div>
             </div>
@@ -116,7 +113,6 @@ export default function ApiDocsPage() {
               </div>
               <div className="flex items-center justify-between text-sm text-gray-200 bg-blue-900/20 p-2 rounded border border-blue-800/50">
                 <span className="flex items-center gap-2">
-                  Fallback to Siray
                   <ShieldCheck size={12} className="text-blue-400" />
                 </span>
                 <ArrowRight size={14} className="text-blue-400" />

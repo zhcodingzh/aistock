@@ -142,9 +142,9 @@ const ODSLogoSVG: React.FC<{ size?: number }> = ({ size = 26 }) => (
 
 );
 
-type OpenDevSocietyBrandingProps = {
+type zhcodingzhBrandingProps = {
     text?: string; // e.g. "Designed by"
-    name?: string; // e.g. "Open Dev Society"
+    name?: string; // e.g. "zhcodingzh"
     style?: React.CSSProperties;
     className?: string;
     logoSize?: number;
@@ -153,9 +153,9 @@ type OpenDevSocietyBrandingProps = {
     outerClassName?: string;
 };
 
-export const OpenDevSocietyBranding: React.FC<OpenDevSocietyBrandingProps> = ({
+export const zhcodingzhBranding: React.FC<zhcodingzhBrandingProps> = ({
                                                                                   text = "Initiative by",
-                                                                                  name = "Open Dev Society",
+                                                                                  name = "zhcodingzh",
                                                                                   style = {},
                                                                                   className = "border-2 border-gray-300 px-3 py-0.5 rounded-lg",
                                                                                   logoSize = 40,
@@ -191,4 +191,4 @@ export const OpenDevSocietyBranding: React.FC<OpenDevSocietyBrandingProps> = ({
     </div>
 );
 
-export default OpenDevSocietyBranding;
+export default zhcodingzhBranding;

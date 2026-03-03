@@ -1,33 +1,38 @@
 services:
-  openstock:
+  aistock:
     build:
       context: .
-      extra_hosts:
-        - "mongodb:host-gateway"
     ports:
-      - "3000:3000"
+      - "3100:3000"
     env_file:
       - .env
     restart: unless-stopped
+    networks:
+      - ssnetwork
     depends_on:
-      - mongodb
+      mongodb:
+        condition: service_healthy
 
   mongodb:
     image: mongo:7
-    container_name: mongodb
+    container_name: aistock-mongodb
     restart: unless-stopped
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: example
-    ports:
-      - "27017:27017"
     volumes:
-      - mongo-data:/data/db
+      - aistock-mongo-data:/data/db
     healthcheck:
       test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - ssnetwork
 
 volumes:
-  mongo-data:
+  aistock-mongo-data:
+
+networks:
+  ssnetwork:
+    external: true

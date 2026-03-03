@@ -1,31 +1,19 @@
-# Use official Node.js 20 Alpine image as base
-FROM node:20-alpine
-
-# Set working directory
+# Stage 1: Build
+FROM node:20-alpine AS builder
 WORKDIR /app
-
-# Copy package.json and package-lock.json to leverage Docker cache
 COPY package*.json ./
-# Uncomment the next line if you use pnpm and have pnpm-lock.yaml
-# COPY pnpm-lock.yaml ./
-
-# Install dependencies (choose npm or pnpm)
 RUN npm install
-# If using pnpm, replace with:
-# RUN npm install -g pnpm && pnpm install
-
-# Copy all project files
 COPY . .
-
-# Build the Next.js application
 RUN npm run build
-# Or if using pnpm:
-# RUN pnpm run build
 
-# Expose the port Next.js runs on
+# Stage 2: Production
+FROM node:20-alpine AS runner
+WORKDIR /app
+ENV NODE_ENV=production
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
 EXPOSE 3000
-
-# Start the Next.js production server
-CMD ["npm", "start"]
-# Or if using pnpm:
-# CMD ["pnpm", "start"]
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
+CMD ["node", "server.js"]

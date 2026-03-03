@@ -68,14 +68,14 @@ export default function DonatePopup() {
                             <Heart className="h-6 w-6 text-teal-400 fill-teal-400" />
                         </div>
                         <DialogTitle className="text-2xl font-bold text-gray-100">
-                            Keep OpenStock Free
+                            Keep AIStock Free
                         </DialogTitle>
                     </div>
                     <DialogDescription className="text-gray-400 text-base leading-relaxed pt-2">
-                        Your overwhelming love for OpenStock and Open Dev Society has helped us grow, 
+                        Your overwhelming love for AIStock and zhcodingzh has helped us grow, 
                         but we're hitting Vercel's free tier limits. 
                         <br /><br />
-                        Help us keep OpenStock free and accessible for everyone by supporting us on GitHub Sponsors. 
+                        Help us keep AIStock free and accessible for everyone by supporting us on GitHub Sponsors. 
                         Every contribution, no matter how small, makes a difference! 💙
                     </DialogDescription>
                 </DialogHeader>

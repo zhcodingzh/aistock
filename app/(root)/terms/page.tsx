@@ -2,7 +2,7 @@ import { Metadata } from 'next';
 import { Shield, FileText, Check, AlertTriangle, Scale } from 'lucide-react';
 
 export const metadata: Metadata = {
-  title: 'Terms of Service | OpenStock',
+  title: 'Terms of Service | AIStock',
   description: 'Fair, transparent, and open terms for our community.',
 };
 
@@ -44,7 +44,7 @@ export default function TermsPage() {
             <div>
               <h3 className="text-xl font-bold text-yellow-100 mb-2">Investment Disclaimer</h3>
               <p className="text-yellow-200/80 leading-relaxed">
-                **OpenStock is an educational and analysis tool, not a financial advisor.**
+                **AIStock is an educational and analysis tool, not a financial advisor.**
                 Data is provided "as is" for informational purposes. Never invest money you cannot afford to lose.
                 Always conduct your own research or consult a certified professional before making financial decisions.
               </p>
@@ -78,7 +78,7 @@ export default function TermsPage() {
         {/* Footer Note */}
         <div className="text-center pt-8 border-t border-gray-800">
           <p className="text-gray-500">
-            Questions about these terms? Email us at <a href="mailto:opendevsociety@gmail.com" className="text-teal-400 hover:underline">opendevsociety@gmail.com</a>
+            Questions about these terms? Email us at <a href="mailto:support@aizhzh.com" className="text-teal-400 hover:underline">support@aizhzh.com</a>
           </p>
         </div>
       </div>

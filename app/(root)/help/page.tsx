@@ -10,14 +10,14 @@ import {
 } from 'lucide-react';
 
 export const metadata: Metadata = {
-  title: 'Help Center | OpenStock',
-  description: 'Community-driven support for OpenStock. No paywalls, just help.',
+  title: 'Help Center | AIStock',
+  description: 'Community-driven support for AIStock. No paywalls, just help.',
 };
 
 export default function HelpPage() {
   const faqs = [
     {
-      question: "Is OpenStock really free forever?",
+      question: "Is AIStock really free forever?",
       answer: "Yes! We run on donations and community contribution. Core features (tracking, alerts, analysis) will remain free. We believe financial tools shouldn't be luxury items."
     },
     {
@@ -63,14 +63,14 @@ export default function HelpPage() {
           icon={<MessageCircle className="text-purple-400" />}
           title="Community Chat"
           desc="Get real-time answers from other users."
-          link="https://discord.gg/JkJ8kfxgxB"
+          link="https://github.com/zhcodingzh/aistock"
           linkText="Join Discord"
         />
         <HelpCard
           icon={<Github className="text-white" />}
           title="Report Bugs"
           desc="Found an issue? Let our developers know."
-          link="https://github.com/Open-Dev-Society/OpenStock/issues"
+          link="https://github.com/zhcodingzh/AIStock/issues"
           linkText="Open Issue"
         />
       </div>
@@ -98,7 +98,7 @@ export default function HelpPage() {
         <h3 className="text-xl font-bold text-white mb-2">Still stuck?</h3>
         <p className="text-gray-400 mb-6">Our team (and community) answers emails, usually entirely for free.</p>
         <a
-          href="mailto:opendevsociety@gmail.com"
+          href="mailto:support@aizhzh.com"
           className="inline-flex items-center gap-2 bg-white text-black px-6 py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors"
         >
           <Mail size={18} />

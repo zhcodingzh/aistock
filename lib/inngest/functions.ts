@@ -35,27 +35,20 @@ export const sendSignUpEmail = inngest.createFunction(
                 }
             });
         } catch (error) {
-            console.error("⚠️ Gemini API failed, switching to Siray.ai fallback", error);
 
             // Fallback Step
             aiResponse = await step.run('generate-welcome-intro-fallback', async () => {
-                const SIRAY_API_KEY = process.env.SIRAY_API_KEY;
-                if (!SIRAY_API_KEY) throw new Error("Siray API Key missing");
 
                 // Simulated OpenAI-compatible call
-                const res = await fetch('https://api.siray.ai/v1/chat/completions', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${SIRAY_API_KEY}`
                     },
                     body: JSON.stringify({
-                        model: 'siray-1.0-ultra', // Hypothetical model
                         messages: [{ role: 'user', content: prompt }]
                     })
                 });
 
-                if (!res.ok) throw new Error(`Siray API Error: ${res.statusText}`);
 
                 const data = await res.json();
                 // Map to Gemini format for compatibility downstream
@@ -71,7 +64,7 @@ export const sendSignUpEmail = inngest.createFunction(
         await step.run('send-welcome-email', async () => {
             try {
                 const part = aiResponse.candidates?.[0]?.content?.parts?.[0];
-                const introText = (part && 'text' in part ? part.text : null) || 'Thanks for joining Openstock. You now have the tools to track markets and make smarter moves.'
+                const introText = (part && 'text' in part ? part.text : null) || 'Thanks for joining AIStock. You now have the tools to track markets and make smarter moves.'
 
                 const { data: { email, name } } = event;
 
@@ -122,24 +115,17 @@ export const sendWeeklyNewsSummary = inngest.createFunction(
                 body: { contents: [{ role: 'user', parts: [{ text: prompt }] }] }
             });
         } catch (error) {
-            console.error("⚠️ Gemini API failed (Weekly News), switching to Siray.ai fallback", error);
             aiResponse = await step.run('generate-news-summary-fallback', async () => {
-                const SIRAY_API_KEY = process.env.SIRAY_API_KEY;
-                if (!SIRAY_API_KEY) return { candidates: [{ content: { parts: [{ text: "Market is moving. Log in to see more." }] } }] };
 
-                const res = await fetch('https://api.siray.ai/v1/chat/completions', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${SIRAY_API_KEY}`
                     },
                     body: JSON.stringify({
-                        model: 'siray-1.0-ultra',
                         messages: [{ role: 'user', content: prompt }]
                     })
                 });
 
-                if (!res.ok) throw new Error("Siray API Error");
                 const data = await res.json();
                 return {
                     candidates: [{
@@ -184,7 +170,7 @@ export const sendWeeklyNewsSummary = inngest.createFunction(
 
             // --- HTML EMAIL TEMPLATE ---
             // Using inline styles for compatibility. Accent Color: Teal (#20c997)
-            const logoUrl = "https://raw.githubusercontent.com/ravixalgorithm/OpenStock/main/public/assets/images/logo.png";
+            const logoUrl = "/assets/images/logo.png";
 
             const content = `
             <!DOCTYPE html>
@@ -210,7 +196,7 @@ export const sendWeeklyNewsSummary = inngest.createFunction(
                                         <tr>
                                             <td style="border-bottom: 1px dashed #333; padding-bottom: 20px;">
                                                  <h2 style="margin: 0; font-size: 24px; font-weight: 700; color: #ffffff; display: flex; align-items: center;">
-                                                    <span style="color: #20c997; margin-right: 10px;">📊</span> OpenStock
+                                                    <span style="color: #20c997; margin-right: 10px;">📊</span> AIStock
                                                  </h2>
                                             </td>
                                         </tr>
@@ -241,13 +227,13 @@ export const sendWeeklyNewsSummary = inngest.createFunction(
                                     <table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin-top: 40px; border-top: 1px dashed #333; padding-top: 20px;">
                                         <tr>
                                             <td align="center" style="color: #666666; font-size: 14px; line-height: 1.5;">
-                                                <p style="margin: 0 0 10px 0;">You're receiving this email because you signed up for OpenStock.</p>
+                                                <p style="margin: 0 0 10px 0;">You're receiving this email because you signed up for AIStock.</p>
                                                 <p style="margin: 0;">
                                                     <a href="{{ unsubscribe_url }}" style="color: #20c997; text-decoration: underline;">Unsubscribe</a>
                                                     <span style="margin: 0 10px;">•</span>
-                                                    <a href="https://openstock-ods.vercel.app" style="color: #20c997; text-decoration: underline;">Visit OpenStock</a>
+                                                    <a href="https://aistock-ods.vercel.app" style="color: #20c997; text-decoration: underline;">Visit AIStock</a>
                                                 </p>
-                                                <p style="margin: 20px 0 0 0; font-size: 12px;">&copy; ${new Date().getFullYear()} OpenStock</p>
+                                                <p style="margin: 20px 0 0 0; font-size: 12px;">&copy; ${new Date().getFullYear()} AIStock</p>
                                             </td>
                                         </tr>
                                     </table>
@@ -433,7 +419,7 @@ export const checkInactiveUsers = inngest.createFunction(
                                         
                                         <!-- Logo -->
                                         <h2 style="margin: 0 0 30px 0; font-size: 24px; color: #ffffff; display: flex; align-items: center;">
-                                            <span style="color: #20c997; margin-right: 10px;">📊</span> OpenStock
+                                            <span style="color: #20c997; margin-right: 10px;">📊</span> AIStock
                                         </h2>
 
                                         <!-- Title -->
@@ -441,7 +427,7 @@ export const checkInactiveUsers = inngest.createFunction(
 
                                         <p style="color: #cccccc; font-size: 16px; line-height: 1.6;">
                                             Hi ${firstName},<br><br>
-                                            We noticed you haven't visited OpenStock in a while. The markets have been moving, and there might be some opportunities you don't want to miss!
+                                            We noticed you haven't visited AIStock in a while. The markets have been moving, and there might be some opportunities you don't want to miss!
                                         </p>
 
                                         <!-- Card -->
@@ -460,17 +446,17 @@ export const checkInactiveUsers = inngest.createFunction(
                                         <table border="0" cellspacing="0" cellpadding="0" width="100%">
                                             <tr>
                                                 <td align="center">
-                                                    <a href="https://openstock.app" style="display: inline-block; background-color: #20c997; color: #000000; font-weight: bold; padding: 14px 30px; text-decoration: none; border-radius: 6px; font-size: 16px;">Return to Dashboard</a>
+                                                    <a href="https://aistock.app" style="display: inline-block; background-color: #20c997; color: #000000; font-weight: bold; padding: 14px 30px; text-decoration: none; border-radius: 6px; font-size: 16px;">Return to Dashboard</a>
                                                 </td>
                                             </tr>
                                         </table>
 
                                         <p style="margin-top: 40px; color: #666; font-size: 14px;">
-                                            Stay sharp,<br>OpenStock Team
+                                            Stay sharp,<br>AIStock Team
                                         </p>
 
                                         <div style="margin-top: 40px; padding-top: 20px; border-top: 1px dashed #333; text-align: center; font-size: 12px; color: #666;">
-                                            <p>You received this because you are an OpenStock user.</p>
+                                            <p>You received this because you are an AIStock user.</p>
                                             <a href="#" style="color: #20c997;">Unsubscribe</a>
                                         </div>
 
