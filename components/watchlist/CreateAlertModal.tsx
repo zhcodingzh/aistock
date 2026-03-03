@@ -1,4 +1,5 @@
 "use client";
+import { useTranslation } from "@/lib/i18n/LanguageContext";
 
 import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -41,6 +42,7 @@ export default function CreateAlertModal({
     const [condition, setCondition] = useState<"ABOVE" | "BELOW">("ABOVE");
     const [alertName, setAlertName] = useState("");
     const [loading, setLoading] = useState(false);
+    const { t } = useTranslation();
 
     // Update target price when currentPrice changes (e.g. freshly fetched)
     React.useEffect(() => {
@@ -57,12 +59,12 @@ export default function CreateAlertModal({
                 targetPrice: parseFloat(targetPrice),
                 condition,
             });
-            toast.success("Alert created successfully");
+            toast.success(t("alert_created"));
             setOpen?.(false);
             if (onAlertCreated) onAlertCreated();
         } catch (error) {
             console.error(error);
-            toast.error("Failed to create alert");
+            toast.error(t("alert_failed"));
         } finally {
             setLoading(false);
         }
@@ -77,7 +79,7 @@ export default function CreateAlertModal({
             )}
             <DialogContent className="sm:max-w-[425px] bg-[#0A0A0A] border-gray-800 text-white shadow-2xl">
                 <DialogHeader>
-                    <DialogTitle className="text-2xl font-bold tracking-tight text-white mb-2">Price Alert</DialogTitle>
+                    <DialogTitle className="text-2xl font-bold tracking-tight text-white mb-2">{t("alerts_title")}</DialogTitle>
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-5 py-2 relative z-10">
 
@@ -112,7 +114,7 @@ export default function CreateAlertModal({
                                 <SelectValue placeholder="Select type" />
                             </SelectTrigger>
                             <SelectContent className="bg-[#1C1C1F] border-gray-800 text-gray-200">
-                                <SelectItem value="price">Price</SelectItem>
+                                <SelectItem value="price">{t("alert_type")}</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
@@ -125,8 +127,8 @@ export default function CreateAlertModal({
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent className="bg-[#1C1C1F] border-gray-800 text-gray-200">
-                                <SelectItem value="ABOVE">Greater than {">"}</SelectItem>
-                                <SelectItem value="BELOW">Less than {"<"}</SelectItem>
+                                <SelectItem value="ABOVE">{t("alert_condition")} {">"}</SelectItem>
+                                <SelectItem value="BELOW">{t("alert_condition")} {"<"}</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
@@ -151,7 +153,7 @@ export default function CreateAlertModal({
                     <div className="pt-1">
                         <p className="text-xs text-gray-500 flex items-center">
                             <span className="w-1.5 h-1.5 rounded-full bg-yellow-500/50 mr-2"></span>
-                            Alert expires automatically in 90 days
+                            {t("alert_active_until")} 90d
                         </p>
                     </div>
 
@@ -161,7 +163,7 @@ export default function CreateAlertModal({
                             disabled={loading}
                             className="w-full bg-[#FACC15] hover:bg-[#EAB308] text-black font-bold h-11 text-base transition-all shadow-[0_0_15px_rgba(250,204,21,0.2)]"
                         >
-                            {loading ? "Creating Alert..." : "Create Alert"}
+                            {loading ? t("creating_alert") : t("create_alert")}
                         </Button>
                     </div>
                 </form>

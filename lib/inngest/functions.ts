@@ -35,29 +35,8 @@ export const sendSignUpEmail = inngest.createFunction(
                 }
             });
         } catch (error) {
-
-            // Fallback Step
-            aiResponse = await step.run('generate-welcome-intro-fallback', async () => {
-
-                // Simulated OpenAI-compatible call
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        messages: [{ role: 'user', content: prompt }]
-                    })
-                });
-
-
-                const data = await res.json();
-                // Map to Gemini format for compatibility downstream
-                return {
-                    candidates: [{
-                        content: { parts: [{ text: data.choices[0].message.content }] }
-                    }]
-                };
-            });
+            console.error('⚠️ Gemini API failed for welcome email:', error);
+            throw error;
         }
 
 
@@ -115,24 +94,8 @@ export const sendWeeklyNewsSummary = inngest.createFunction(
                 body: { contents: [{ role: 'user', parts: [{ text: prompt }] }] }
             });
         } catch (error) {
-            aiResponse = await step.run('generate-news-summary-fallback', async () => {
-
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        messages: [{ role: 'user', content: prompt }]
-                    })
-                });
-
-                const data = await res.json();
-                return {
-                    candidates: [{
-                        content: { parts: [{ text: data.choices[0].message.content }] }
-                    }]
-                };
-            });
+            console.error('⚠️ Gemini API failed for news summary:', error);
+            throw error;
         }
 
 

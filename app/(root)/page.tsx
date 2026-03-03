@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import TradingViewWidget from "@/components/TradingViewWidget";
 import {
     HEATMAP_WIDGET_CONFIG,

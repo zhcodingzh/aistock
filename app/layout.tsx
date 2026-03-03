@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { Analytics } from "@vercel/analytics/next";
 import {Toaster} from "@/components/ui/sonner";
+import { LanguageProvider } from "@/lib/i18n/LanguageContext";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -16,22 +16,21 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "AIStock",
-  description: "AIStock is an open-source alternative to expensive market platforms. Track real-time prices, set personalized alerts, and explore detailed company insights — built openly, for everyone, forever free.",
+  description: "AIStock - US stock market platform with AI analysis, watchlist and alerts.",
 };
 
 export default function RootLayout({
-                                       children,
-                                   }: Readonly<{
+    children,
+}: Readonly<{
     children: React.ReactNode;
 }>) {
     return (
         <html lang="en" className="dark">
-            <body
-                className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-            >
-                {children}
-                <Toaster/>
-                <Analytics />
+            <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+                <LanguageProvider>
+                    {children}
+                    <Toaster/>
+                </LanguageProvider>
             </body>
         </html>
     );
