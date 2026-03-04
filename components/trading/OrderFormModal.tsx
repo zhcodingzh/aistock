@@ -13,7 +13,7 @@ interface OrderFormModalProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     userId: string;
-    symbol: string;
+    symbol?: string;
     onCreated: (order: OrderRecord) => void;
 }
 
@@ -21,18 +21,22 @@ export default function OrderFormModal({
     open,
     onOpenChange,
     userId,
-    symbol,
+    symbol: symbolProp = '',
     onCreated,
 }: OrderFormModalProps) {
     const [type, setType] = useState<OrderType>('BUY');
+    const [symbolInput, setSymbolInput] = useState('');
     const [shares, setShares] = useState('');
     const [price, setPrice] = useState('');
     const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
     const [note, setNote] = useState('');
     const [loading, setLoading] = useState(false);
 
+    const symbol = symbolProp || symbolInput.toUpperCase().trim();
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (!symbol) { toast.error('Enter a stock symbol'); return; }
         const s = parseFloat(shares);
         const p = parseFloat(price);
         if (isNaN(s) || s <= 0 || isNaN(p) || p <= 0) {
@@ -48,6 +52,7 @@ export default function OrderFormModal({
             setShares('');
             setPrice('');
             setNote('');
+            setSymbolInput('');
         } catch {
             toast.error('Failed to add order');
         } finally {
@@ -59,9 +64,21 @@ export default function OrderFormModal({
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-[400px] bg-[#0A0A0A] border-gray-800 text-white">
                 <DialogHeader>
-                    <DialogTitle>Add Order — {symbol}</DialogTitle>
+                    <DialogTitle>{symbolProp ? `Add Order — ${symbolProp}` : 'Add Order'}</DialogTitle>
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-4 pt-2">
+                    {!symbolProp && (
+                        <div className="grid gap-2">
+                            <Label className="text-gray-400 text-sm">Symbol</Label>
+                            <Input
+                                value={symbolInput}
+                                onChange={e => setSymbolInput(e.target.value.toUpperCase())}
+                                placeholder="AAPL"
+                                className="bg-gray-900 border-gray-700 text-white font-mono uppercase"
+                                required
+                            />
+                        </div>
+                    )}
                     <div className="grid gap-2">
                         <Label className="text-gray-400 text-sm">Type</Label>
                         <Select value={type} onValueChange={(v: any) => setType(v)}>
