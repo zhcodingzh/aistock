@@ -215,6 +215,54 @@ declare global {
         threshold: number;
         changePercent?: number;
     };
+
+    // Trading Orders
+    type OrderType = 'BUY' | 'SELL';
+
+    type OrderRecord = {
+        _id: string;
+        userId: string;
+        symbol: string;
+        type: OrderType;
+        shares: number;
+        price: number;
+        date: string; // ISO string after JSON serialization
+        note?: string;
+        createdAt: string;
+    };
+
+    type CreateOrderParams = {
+        userId: string;
+        symbol: string;
+        type: OrderType;
+        shares: number;
+        price: number;
+        date: string;
+        note?: string;
+    };
+
+    type PositionInfo = {
+        symbol: string;
+        sharesHeld: number;
+        avgCost: number;
+        totalCost: number;
+        realizedPnl: number;
+        yearlyRealizedPnl: number;
+        unrealizedPnl: number;
+        totalPnl: number;
+        yearlyPnl: number;
+        marketValue: number;
+        currentPrice: number;
+    };
+
+    type PortfolioSummary = {
+        positions: PositionInfo[];
+        totalMarketValue: number;
+        totalRealizedPnl: number;
+        totalUnrealizedPnl: number;
+        totalPnl: number;
+        yearlyPnl: number;
+    };
 }
 
 export {};
