@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useTranslation } from '@/lib/i18n/LanguageContext';
 import { createOrder } from '@/lib/actions/order.actions';
 import { toast } from 'sonner';
 
@@ -24,6 +25,7 @@ export default function OrderFormModal({
     symbol: symbolProp = '',
     onCreated,
 }: OrderFormModalProps) {
+    const { t } = useTranslation();
     const [type, setType] = useState<OrderType>('BUY');
     const [symbolInput, setSymbolInput] = useState('');
     const [shares, setShares] = useState('');
@@ -36,17 +38,17 @@ export default function OrderFormModal({
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!symbol) { toast.error('Enter a stock symbol'); return; }
+        if (!symbol) { toast.error(t('trading_invalid_symbol')); return; }
         const s = parseFloat(shares);
         const p = parseFloat(price);
         if (isNaN(s) || s <= 0 || isNaN(p) || p <= 0) {
-            toast.error('Invalid shares or price');
+            toast.error(t('trading_invalid_shares_price'));
             return;
         }
         setLoading(true);
         try {
             const order = await createOrder({ userId, symbol, type, shares: s, price: p, date, note });
-            toast.success('Order added');
+            toast.success(t('trading_order_added'));
             onCreated(order);
             onOpenChange(false);
             setShares('');
@@ -54,7 +56,7 @@ export default function OrderFormModal({
             setNote('');
             setSymbolInput('');
         } catch {
-            toast.error('Failed to add order');
+            toast.error(t('trading_add_failed'));
         } finally {
             setLoading(false);
         }
@@ -64,12 +66,14 @@ export default function OrderFormModal({
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-[400px] bg-[#0A0A0A] border-gray-800 text-white">
                 <DialogHeader>
-                    <DialogTitle>{symbolProp ? `Add Order — ${symbolProp}` : 'Add Order'}</DialogTitle>
+                    <DialogTitle>
+                        {symbolProp ? `${t('trading_add_order_title')} — ${symbolProp}` : t('trading_add_order_title')}
+                    </DialogTitle>
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-4 pt-2">
                     {!symbolProp && (
                         <div className="grid gap-2">
-                            <Label className="text-gray-400 text-sm">Symbol</Label>
+                            <Label className="text-gray-400 text-sm">{t('trading_symbol_input')}</Label>
                             <Input
                                 value={symbolInput}
                                 onChange={e => setSymbolInput(e.target.value.toUpperCase())}
@@ -80,20 +84,20 @@ export default function OrderFormModal({
                         </div>
                     )}
                     <div className="grid gap-2">
-                        <Label className="text-gray-400 text-sm">Type</Label>
+                        <Label className="text-gray-400 text-sm">{t('order_type')}</Label>
                         <Select value={type} onValueChange={(v: any) => setType(v)}>
                             <SelectTrigger className="bg-gray-900 border-gray-700 text-white">
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent className="bg-gray-900 border-gray-700 text-white">
-                                <SelectItem value="BUY">BUY</SelectItem>
-                                <SelectItem value="SELL">SELL</SelectItem>
+                                <SelectItem value="BUY">{t('order_buy')}</SelectItem>
+                                <SelectItem value="SELL">{t('order_sell')}</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                         <div className="grid gap-2">
-                            <Label className="text-gray-400 text-sm">Shares</Label>
+                            <Label className="text-gray-400 text-sm">{t('order_qty')}</Label>
                             <Input
                                 type="number"
                                 step="0.0001"
@@ -106,7 +110,7 @@ export default function OrderFormModal({
                             />
                         </div>
                         <div className="grid gap-2">
-                            <Label className="text-gray-400 text-sm">Price ($)</Label>
+                            <Label className="text-gray-400 text-sm">{t('trading_price_usd')}</Label>
                             <Input
                                 type="number"
                                 step="0.01"
@@ -120,7 +124,7 @@ export default function OrderFormModal({
                         </div>
                     </div>
                     <div className="grid gap-2">
-                        <Label className="text-gray-400 text-sm">Date</Label>
+                        <Label className="text-gray-400 text-sm">{t('order_date')}</Label>
                         <Input
                             type="date"
                             value={date}
@@ -130,11 +134,11 @@ export default function OrderFormModal({
                         />
                     </div>
                     <div className="grid gap-2">
-                        <Label className="text-gray-400 text-sm">Note (optional)</Label>
+                        <Label className="text-gray-400 text-sm">{t('trading_note_optional')}</Label>
                         <Input
                             value={note}
                             onChange={e => setNote(e.target.value)}
-                            placeholder="e.g. Earnings play"
+                            placeholder={t('trading_note_placeholder')}
                             className="bg-gray-900 border-gray-700 text-white"
                         />
                     </div>
@@ -143,7 +147,7 @@ export default function OrderFormModal({
                         disabled={loading}
                         className="w-full bg-[#FACC15] hover:bg-[#EAB308] text-black font-bold h-10"
                     >
-                        {loading ? 'Saving…' : 'Add Order'}
+                        {loading ? t('trading_saving') : t('trading_add_order_title')}
                     </Button>
                 </form>
             </DialogContent>

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useTranslation } from '@/lib/i18n/LanguageContext';
 import { deleteOrder } from '@/lib/actions/order.actions';
 import { toast } from 'sonner';
 
@@ -12,24 +13,25 @@ interface OrdersTableProps {
 }
 
 export default function OrdersTable({ orders, onDeleted }: OrdersTableProps) {
+    const { t } = useTranslation();
     const [deletingId, setDeletingId] = useState<string | null>(null);
 
     const handleDelete = async (id: string) => {
-        if (!confirm('Delete this order?')) return;
+        if (!confirm(t('trading_delete_confirm'))) return;
         setDeletingId(id);
         try {
             await deleteOrder(id);
             onDeleted(id);
-            toast.success('Order deleted');
+            toast.success(t('trading_order_deleted'));
         } catch {
-            toast.error('Failed to delete order');
+            toast.error(t('trading_delete_failed'));
         } finally {
             setDeletingId(null);
         }
     };
 
     if (orders.length === 0) {
-        return <p className="text-gray-600 text-sm p-4">No orders yet.</p>;
+        return <p className="text-gray-600 text-sm p-4">{t('trading_no_orders_empty')}</p>;
     }
 
     return (
@@ -37,12 +39,12 @@ export default function OrdersTable({ orders, onDeleted }: OrdersTableProps) {
             <table className="w-full text-sm">
                 <thead>
                     <tr className="border-b border-gray-800 text-gray-500 text-xs">
-                        <th className="text-left px-4 py-2">Date</th>
-                        <th className="text-left px-4 py-2">Type</th>
-                        <th className="text-right px-4 py-2">Shares</th>
-                        <th className="text-right px-4 py-2">Price</th>
-                        <th className="text-right px-4 py-2">Total</th>
-                        <th className="text-left px-4 py-2">Note</th>
+                        <th className="text-left px-4 py-2">{t('order_date')}</th>
+                        <th className="text-left px-4 py-2">{t('order_type')}</th>
+                        <th className="text-right px-4 py-2">{t('order_qty')}</th>
+                        <th className="text-right px-4 py-2">{t('order_price')}</th>
+                        <th className="text-right px-4 py-2">{t('trading_total_col')}</th>
+                        <th className="text-left px-4 py-2">{t('trading_note')}</th>
                         <th className="px-4 py-2" />
                     </tr>
                 </thead>
@@ -58,7 +60,7 @@ export default function OrdersTable({ orders, onDeleted }: OrdersTableProps) {
                                         ? 'bg-green-900/50 text-green-400'
                                         : 'bg-red-900/50 text-red-400'
                                 }`}>
-                                    {o.type}
+                                    {o.type === 'BUY' ? t('order_buy') : t('order_sell')}
                                 </span>
                             </td>
                             <td className="px-4 py-2 text-right font-mono text-gray-200">{o.shares}</td>

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Plus, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useTranslation } from '@/lib/i18n/LanguageContext';
 import AdvancedChart from './AdvancedChart';
 import PositionSummary from './PositionSummary';
 import OrdersTable from './OrdersTable';
@@ -24,6 +25,7 @@ export default function TradingDetail({
     orders,
     onOrdersChange,
 }: TradingDetailProps) {
+    const { t } = useTranslation();
     const [addOpen, setAddOpen] = useState(false);
     const [importOpen, setImportOpen] = useState(false);
 
@@ -37,7 +39,6 @@ export default function TradingDetail({
 
     return (
         <div className="flex flex-col h-full">
-            {/* Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-800">
                 <h2 className="text-xl font-bold font-mono text-white">{symbol}</h2>
                 <div className="flex gap-2">
@@ -48,7 +49,7 @@ export default function TradingDetail({
                         onClick={() => setImportOpen(true)}
                     >
                         <Upload className="h-3.5 w-3.5" />
-                        Import CSV
+                        {t('trading_import_csv_btn')}
                     </Button>
                     <Button
                         size="sm"
@@ -56,29 +57,25 @@ export default function TradingDetail({
                         onClick={() => setAddOpen(true)}
                     >
                         <Plus className="h-3.5 w-3.5" />
-                        Add Order
+                        {t('add_order')}
                     </Button>
                 </div>
             </div>
 
-            {/* TradingView Chart */}
             <AdvancedChart symbol={symbol} />
 
-            {/* Position Summary */}
             <div className="border-t border-gray-800">
                 <PositionSummary position={position} />
             </div>
 
-            {/* Orders Table */}
             <div className="border-t border-gray-800 flex-1">
                 <div className="px-4 py-3 flex items-center justify-between">
-                    <h3 className="text-sm font-semibold text-gray-400">Orders</h3>
-                    <span className="text-xs text-gray-600">{orders.length} records</span>
+                    <h3 className="text-sm font-semibold text-gray-400">{t('orders_list')}</h3>
+                    <span className="text-xs text-gray-600">{orders.length} {t('trading_records')}</span>
                 </div>
                 <OrdersTable orders={orders} onDeleted={handleOrderDeleted} />
             </div>
 
-            {/* Modals */}
             <OrderFormModal
                 open={addOpen}
                 onOpenChange={setAddOpen}

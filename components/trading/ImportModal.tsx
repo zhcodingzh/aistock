@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { useTranslation } from '@/lib/i18n/LanguageContext';
 import { importOrdersFromCsv } from '@/lib/actions/order.actions';
 import { toast } from 'sonner';
 
@@ -19,13 +20,14 @@ const EXAMPLE_CSV = `date,symbol,type,shares,price,note
 2024-06-10,AAPL,SELL,5,195.00,Taking profit`;
 
 export default function ImportModal({ open, onOpenChange, userId, onImported }: ImportModalProps) {
+    const { t, locale } = useTranslation();
     const [csvText, setCsvText] = useState('');
     const [loading, setLoading] = useState(false);
     const [result, setResult] = useState<{ imported: number; errors: string[] } | null>(null);
 
     const handleImport = async () => {
         if (!csvText.trim()) {
-            toast.error('Paste CSV data first');
+            toast.error(t('trading_paste_csv_first'));
             return;
         }
         setLoading(true);
@@ -34,12 +36,15 @@ export default function ImportModal({ open, onOpenChange, userId, onImported }: 
             const res = await importOrdersFromCsv(userId, csvText);
             setResult(res);
             if (res.imported > 0) {
-                toast.success(`Imported ${res.imported} orders`);
+                const successMsg = locale === 'zh'
+                    ? `成功导入 ${res.imported} 条`
+                    : `Imported ${res.imported} orders`;
+                toast.success(successMsg);
                 onImported();
             }
             if (res.errors.length === 0) onOpenChange(false);
         } catch (err: any) {
-            toast.error(err.message || 'Import failed');
+            toast.error(err.message || t('trading_import_failed'));
         } finally {
             setLoading(false);
         }
@@ -49,12 +54,12 @@ export default function ImportModal({ open, onOpenChange, userId, onImported }: 
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-[560px] bg-[#0A0A0A] border-gray-800 text-white">
                 <DialogHeader>
-                    <DialogTitle>Import Orders via CSV</DialogTitle>
+                    <DialogTitle>{t('trading_import_title')}</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4 pt-2">
                     <p className="text-xs text-gray-500">
-                        Required columns: <code className="text-yellow-400">date, symbol, type, shares, price</code>
-                        <br />Optional: <code className="text-gray-400">note</code>
+                        {t('trading_csv_required')} <code className="text-yellow-400">date, symbol, type, shares, price</code>
+                        <br />{t('trading_csv_optional_label')} <code className="text-gray-400">note</code>
                     </p>
 
                     <button
@@ -62,7 +67,7 @@ export default function ImportModal({ open, onOpenChange, userId, onImported }: 
                         onClick={() => setCsvText(EXAMPLE_CSV)}
                         type="button"
                     >
-                        Load example CSV
+                        {t('trading_load_example')}
                     </button>
 
                     <textarea
@@ -75,7 +80,7 @@ export default function ImportModal({ open, onOpenChange, userId, onImported }: 
 
                     {result && result.errors.length > 0 && (
                         <div className="bg-red-900/20 border border-red-800 rounded p-3 space-y-1">
-                            <p className="text-xs text-red-400 font-bold">{result.errors.length} errors:</p>
+                            <p className="text-xs text-red-400 font-bold">{result.errors.length} {t('trading_errors_label')}</p>
                             {result.errors.map((e, i) => (
                                 <p key={i} className="text-xs text-red-300">{e}</p>
                             ))}
@@ -87,7 +92,7 @@ export default function ImportModal({ open, onOpenChange, userId, onImported }: 
                         disabled={loading}
                         className="w-full bg-[#FACC15] hover:bg-[#EAB308] text-black font-bold h-10"
                     >
-                        {loading ? 'Importing…' : 'Import'}
+                        {loading ? t('trading_importing') : t('import_orders')}
                     </Button>
                 </div>
             </DialogContent>

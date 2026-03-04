@@ -1,23 +1,26 @@
 'use client';
 
+import { useTranslation } from '@/lib/i18n/LanguageContext';
+
 interface PositionSummaryProps {
     position: PositionInfo;
 }
 
 export default function PositionSummary({ position: p }: PositionSummaryProps) {
+    const { t } = useTranslation();
     const fmt$ = (n: number) => `$${n.toFixed(2)}`;
     const fmtPnl = (n: number) => (n >= 0 ? `+$${n.toFixed(2)}` : `-$${Math.abs(n).toFixed(2)}`);
     const color = (n: number) => (n >= 0 ? 'text-green-400' : 'text-red-400');
 
     const items = [
-        { label: 'Shares Held', value: p.sharesHeld.toString(), cls: 'text-white' },
-        { label: 'Avg Cost', value: fmt$(p.avgCost), cls: 'text-white' },
-        { label: 'Current Price', value: fmt$(p.currentPrice), cls: 'text-white' },
-        { label: 'Market Value', value: fmt$(p.marketValue), cls: 'text-white' },
-        { label: 'Unrealized P&L', value: fmtPnl(p.unrealizedPnl), cls: color(p.unrealizedPnl) },
-        { label: 'Realized P&L', value: fmtPnl(p.realizedPnl), cls: color(p.realizedPnl) },
-        { label: 'Total P&L', value: fmtPnl(p.totalPnl), cls: color(p.totalPnl) },
-        { label: 'Yearly P&L', value: fmtPnl(p.yearlyPnl), cls: color(p.yearlyPnl) },
+        { label: t('trading_shares_held'), value: p.sharesHeld.toString(), cls: 'text-white' },
+        { label: t('portfolio_avg_cost'), value: fmt$(p.avgCost), cls: 'text-white' },
+        { label: t('trading_current_price'), value: fmt$(p.currentPrice), cls: 'text-white' },
+        { label: t('trading_market_value'), value: fmt$(p.marketValue), cls: 'text-white' },
+        { label: t('trading_unrealized_pnl'), value: fmtPnl(p.unrealizedPnl), cls: color(p.unrealizedPnl) },
+        { label: t('portfolio_realized'), value: fmtPnl(p.realizedPnl), cls: color(p.realizedPnl) },
+        { label: t('trading_total_pnl'), value: fmtPnl(p.totalPnl), cls: color(p.totalPnl) },
+        { label: t('trading_yearly_pnl'), value: fmtPnl(p.yearlyPnl), cls: color(p.yearlyPnl) },
     ];
 
     return (
