@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import { useTranslation } from '@/lib/i18n/LanguageContext';
 
 interface AdvancedChartProps {
     symbol: string;
@@ -8,6 +9,7 @@ interface AdvancedChartProps {
 
 export default function AdvancedChart({ symbol }: AdvancedChartProps) {
     const containerRef = useRef<HTMLDivElement>(null);
+    const { locale } = useTranslation();
 
     useEffect(() => {
         if (!containerRef.current) return;
@@ -26,7 +28,7 @@ export default function AdvancedChart({ symbol }: AdvancedChartProps) {
             timezone: 'Etc/UTC',
             theme: 'dark',
             style: '1',
-            locale: 'en',
+            locale: locale === 'zh' ? 'zh_CN' : 'en',
             toolbar_bg: '#0a0a0a',
             enable_publishing: false,
             hide_top_toolbar: false,
@@ -38,7 +40,7 @@ export default function AdvancedChart({ symbol }: AdvancedChartProps) {
         });
 
         containerRef.current.appendChild(script);
-    }, [symbol]);
+    }, [symbol, locale]);
 
     return (
         <div className="tradingview-widget-container w-full h-[500px]" ref={containerRef} />
