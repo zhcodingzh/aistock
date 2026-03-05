@@ -7,17 +7,48 @@ import { connectToDatabase } from '@/database/mongoose';
 import { Order } from '@/database/models/order.model';
 import { Analysis } from '@/database/models/analysis.model';
 import {
-    getCandles,
-    getIntradayCandles,
     getMetrics,
     getRecommendations,
     getNews,
     getCompanyProfile,
     getQuote,
 } from '@/lib/actions/finnhub.actions';
-import { calculateIndicators } from '@/lib/trading/indicators';
+import { calculateIndicators, type TechnicalSignals } from '@/lib/trading/indicators';
 import { calculatePosition } from '@/lib/trading/pnl';
 import { STOCK_ANALYSIS_PROMPT } from '@/lib/inngest/prompts';
+
+/** 用 Yahoo Finance 获取近 90 天日 K 线（免费，无需 key） */
+async function getYahooCandles(symbol: string): Promise<{
+    c: number[]; v: number[];
+} | null> {
+    try {
+        const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=3mo`;
+        const res = await fetch(url, {
+            headers: { 'User-Agent': 'Mozilla/5.0' },
+            next: { revalidate: 3600 },
+        });
+        if (!res.ok) return null;
+        const data = await res.json();
+        const result = data?.chart?.result?.[0];
+        if (!result) return null;
+        const closes: number[] = result.indicators?.quote?.[0]?.close ?? [];
+        const volumes: number[] = result.indicators?.quote?.[0]?.volume ?? [];
+        // 过滤掉 null 值（停牌日）
+        const valid = closes.map((c, i) => ({ c, v: volumes[i] ?? 0 })).filter(x => x.c != null);
+        if (valid.length < 30) return null;
+        return { c: valid.map(x => x.c), v: valid.map(x => x.v) };
+    } catch {
+        return null;
+    }
+}
+
+const NEUTRAL_SIGNALS: TechnicalSignals = {
+    rsi: null, rsiSignal: 'NEUTRAL',
+    macdSignal: 'NEUTRAL', macdHistogram: null,
+    priceVsMa20: 'AT', priceVsMa50: 'AT', priceVsMa200: 'AT',
+    bbPosition: 'MIDDLE',
+    todayGapPct: null, todayVolRatio: null,
+};
 
 export async function runStockAnalysis(params: {
     userId: string;
@@ -30,10 +61,9 @@ export async function runStockAnalysis(params: {
     await connectToDatabase();
     const today = new Date().toISOString().slice(0, 10);
 
-    const [candles, intradayCandles, metrics, recommendations, news, profile, quote, orders] =
+    const [yahooCandles, metrics, recommendations, news, profile, quote, orders] =
         await Promise.all([
-            getCandles(symbol),
-            getIntradayCandles(symbol),
+            getYahooCandles(symbol),
             getMetrics(symbol),
             getRecommendations(symbol),
             getNews([symbol]),
@@ -42,17 +72,12 @@ export async function runStockAnalysis(params: {
             Order.find({ userId, symbol }).lean(),
         ]);
 
-    if (!candles || candles.c.length < 30) {
-        return { success: false, error: 'Insufficient candle data' };
-    }
+    const signals: TechnicalSignals = yahooCandles
+        ? calculateIndicators(yahooCandles.c, yahooCandles.v, [], [])
+        : NEUTRAL_SIGNALS;
 
-    const signals = calculateIndicators(
-        candles.c,
-        candles.v,
-        intradayCandles?.c ?? [],
-        intradayCandles?.v ?? []
-    );
-    const currentPrice = (quote as any)?.c ?? candles.c[candles.c.length - 1];
+    const currentPrice = (quote as any)?.c ?? yahooCandles?.c[yahooCandles.c.length - 1] ?? 0;
+    if (!currentPrice) return { success: false, error: 'Could not fetch current price' };
     const position =
         (orders as any[]).length > 0
             ? calculatePosition(orders as any[], currentPrice)
