@@ -11,6 +11,7 @@ const NAV_KEYS = [
     { href: '/search', key: 'nav_search' },
     { href: '/watchlist', key: 'nav_watchlist' },
     { href: '/trading', key: 'nav_trading' },
+    { href: '/ai-analysis', key: 'ai_nav' },
 ] as const;
 
 const NavItems = ({initialStocks}: { initialStocks: StockWithWatchlistStatus[]}) => {
