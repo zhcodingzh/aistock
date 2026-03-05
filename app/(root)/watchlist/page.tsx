@@ -6,6 +6,7 @@ import { redirect } from 'next/navigation';
 import { getUserWatchlist } from '@/lib/actions/watchlist.actions';
 import { getUserAlerts } from '@/lib/actions/alert.actions';
 import { getNews } from '@/lib/actions/finnhub.actions';
+import { getPortfolioAnalysisSummary } from '@/lib/actions/analysis.actions';
 import WatchlistManager from '@/components/watchlist/WatchlistManager';
 import AlertsPanel from '@/components/watchlist/AlertsPanel';
 import NewsGrid from '@/components/watchlist/NewsGrid';
@@ -24,11 +25,14 @@ export default async function WatchlistPage() {
     const userId = session.user.id;
 
     // Parallel data fetching
-    const [watchlistItems, alerts, news] = await Promise.all([
+    const [watchlistItems, alerts, news, analyses] = await Promise.all([
         getUserWatchlist(userId),
         getUserAlerts(userId),
-        getNews() // Initial news fetch
+        getNews(),
+        getPortfolioAnalysisSummary(userId),
     ]);
+    const analysisMap: Record<string, AnalysisRecord> = {};
+    for (const a of analyses) analysisMap[a.symbol] = a;
 
     const watchlistSymbols = watchlistItems.map((item: any) => item.symbol);
 
@@ -54,7 +58,7 @@ export default async function WatchlistPage() {
                 {/* Main Content - Watchlist Table */}
                 <div className="lg:col-span-3 space-y-8">
                     <div className="space-y-6">
-                        <WatchlistManager initialItems={watchlistItems} userId={userId} />
+                        <WatchlistManager initialItems={watchlistItems} userId={userId} analysisMap={analysisMap} />
                     </div>
 
                     {/* News Section */}

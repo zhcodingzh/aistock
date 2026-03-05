@@ -9,6 +9,7 @@ import PositionSummary from './PositionSummary';
 import OrdersTable from './OrdersTable';
 import OrderFormModal from './OrderFormModal';
 import ImportModal from './ImportModal';
+import AnalysisCard from '@/components/analysis/AnalysisCard';
 
 interface TradingDetailProps {
     userId: string;
@@ -16,6 +17,7 @@ interface TradingDetailProps {
     position: PositionInfo;
     orders: OrderRecord[];
     onOrdersChange: (orders: OrderRecord[]) => void;
+    analysis: AnalysisRecord | null;
 }
 
 export default function TradingDetail({
@@ -24,6 +26,7 @@ export default function TradingDetail({
     position,
     orders,
     onOrdersChange,
+    analysis,
 }: TradingDetailProps) {
     const { t } = useTranslation();
     const [addOpen, setAddOpen] = useState(false);
@@ -63,6 +66,15 @@ export default function TradingDetail({
             </div>
 
             <AdvancedChart symbol={symbol} />
+
+            <div className="border-t border-gray-800">
+                <div className="px-4 pt-3 pb-1 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                    {t('ai_analysis_title')}
+                </div>
+                <div className="px-4 pb-3">
+                    <AnalysisCard userId={userId} symbol={symbol} analysis={analysis} />
+                </div>
+            </div>
 
             <div className="border-t border-gray-800">
                 <PositionSummary position={position} />

@@ -3,6 +3,7 @@
 import React, { useState, useMemo } from 'react';
 import WatchlistStockChip from './WatchlistStockChip';
 import TradingViewWatchlist from './TradingViewWatchlist';
+import AnalysisCard from '@/components/analysis/AnalysisCard';
 import { Button } from '@/components/ui/button';
 import { ArrowDownAZ, ArrowUpZA, ArrowUpDown } from 'lucide-react';
 import { WatchlistItem } from '@/database/models/watchlist.model';
@@ -11,9 +12,10 @@ import { useTranslation } from '@/lib/i18n/LanguageContext';
 interface WatchlistManagerProps {
     initialItems: WatchlistItem[];
     userId: string;
+    analysisMap?: Record<string, AnalysisRecord>;
 }
 
-export default function WatchlistManager({ initialItems, userId }: WatchlistManagerProps) {
+export default function WatchlistManager({ initialItems, userId, analysisMap }: WatchlistManagerProps) {
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc' | null>(null);
     const { t } = useTranslation();
 
@@ -62,6 +64,22 @@ export default function WatchlistManager({ initialItems, userId }: WatchlistMana
                     <p className="text-sm text-gray-500 italic">{t('no_stocks')}</p>
                 )}
             </div>
+            {analysisMap && watchlistSymbols.length > 0 && (
+                <div className="space-y-2">
+                    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{t('ai_analysis_title')}</h3>
+                    <div className="flex flex-wrap gap-2">
+                        {sortedItems.map((item) => (
+                            <AnalysisCard
+                                key={item.symbol}
+                                userId={userId}
+                                symbol={item.symbol}
+                                analysis={analysisMap[item.symbol] ?? null}
+                                compact
+                            />
+                        ))}
+                    </div>
+                </div>
+            )}
             <div className="min-h-[550px]">
                 <TradingViewWatchlist symbols={watchlistSymbols} />
             </div>

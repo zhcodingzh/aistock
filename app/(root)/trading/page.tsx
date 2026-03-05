@@ -6,6 +6,7 @@ import { redirect } from 'next/navigation';
 import { getUserOrders } from '@/lib/actions/order.actions';
 import { getQuote } from '@/lib/actions/finnhub.actions';
 import { calculatePortfolio } from '@/lib/trading/pnl';
+import { getPortfolioAnalysisSummary } from '@/lib/actions/analysis.actions';
 import TradingLayout from '@/components/trading/TradingLayout';
 
 export default async function TradingPage() {
@@ -14,7 +15,12 @@ export default async function TradingPage() {
     if (!session) redirect('/sign-in');
 
     const userId = session.user.id;
-    const allOrders = await getUserOrders(userId);
+    const [allOrders, analyses] = await Promise.all([
+        getUserOrders(userId),
+        getPortfolioAnalysisSummary(userId),
+    ]);
+    const analysisMap: Record<string, AnalysisRecord> = {};
+    for (const a of analyses) analysisMap[a.symbol] = a;
 
     // Group orders by symbol
     const ordersBySymbol: Record<string, OrderRecord[]> = {};
@@ -40,6 +46,7 @@ export default async function TradingPage() {
             portfolio={portfolio}
             ordersBySymbol={ordersBySymbol}
             priceMap={priceMap}
+            analysisMap={analysisMap}
         />
     );
 }

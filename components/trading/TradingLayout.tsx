@@ -13,6 +13,7 @@ interface TradingLayoutProps {
     portfolio: PortfolioSummary;
     ordersBySymbol: Record<string, OrderRecord[]>;
     priceMap: Record<string, number>;
+    analysisMap: Record<string, AnalysisRecord>;
 }
 
 export default function TradingLayout({
@@ -20,6 +21,7 @@ export default function TradingLayout({
     portfolio,
     ordersBySymbol,
     priceMap,
+    analysisMap,
 }: TradingLayoutProps) {
     const symbols = portfolio.positions.map(p => p.symbol);
     const [selectedSymbol, setSelectedSymbol] = useState<string | 'portfolio'>(
@@ -53,6 +55,7 @@ export default function TradingLayout({
                         position={portfolio.positions.find(p => p.symbol === selectedSymbol)!}
                         orders={localOrdersBySymbol[selectedSymbol] ?? []}
                         onOrdersChange={(orders: OrderRecord[]) => handleOrdersChange(selectedSymbol, orders)}
+                        analysis={analysisMap[selectedSymbol] ?? null}
                     />
                 )}
             </div>

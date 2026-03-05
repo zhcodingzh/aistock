@@ -6,6 +6,7 @@ import Link from "next/link";
 import { ArrowUp, ArrowDown, Bell } from "lucide-react";
 import CreateAlertModal from "./CreateAlertModal";
 import WatchlistButton from "@/components/WatchlistButton";
+import AnalysisCard from "@/components/analysis/AnalysisCard";
 import { formatCurrency, formatNumber } from "@/lib/utils";
 import { removeFromWatchlist } from "@/lib/actions/watchlist.actions";
 
@@ -13,9 +14,10 @@ interface WatchlistTableProps {
     data: any[];
     userId: string;
     onRefresh?: () => void;
+    analysisMap?: Record<string, AnalysisRecord>;
 }
 
-export default function WatchlistTable({ data, userId, onRefresh }: WatchlistTableProps) {
+export default function WatchlistTable({ data, userId, onRefresh, analysisMap }: WatchlistTableProps) {
     const [stocks, setStocks] = useState(data);
 
     useEffect(() => {
@@ -80,6 +82,7 @@ export default function WatchlistTable({ data, userId, onRefresh }: WatchlistTab
                         <th className="px-6 py-4 font-semibold tracking-wide">Price</th>
                         <th className="px-6 py-4 font-semibold tracking-wide">Change</th>
                         <th className="px-6 py-4 font-semibold tracking-wide">Market Cap</th>
+                        <th className="px-6 py-4 font-semibold tracking-wide">AI</th>
                         <th className="px-6 py-4 text-right font-semibold tracking-wide">Actions</th>
                     </tr>
                 </thead>
@@ -125,6 +128,14 @@ export default function WatchlistTable({ data, userId, onRefresh }: WatchlistTab
                                 </td>
                                 <td className="px-6 py-4 text-gray-400 font-medium">
                                     {formatNumber(stock.marketCap)}
+                                </td>
+                                <td className="px-6 py-4">
+                                    <AnalysisCard
+                                        userId={userId}
+                                        symbol={stock.symbol}
+                                        analysis={analysisMap?.[stock.symbol] ?? null}
+                                        compact
+                                    />
                                 </td>
                                 <td className="px-6 py-4 text-right">
                                     <div className="flex items-center justify-end space-x-3 opacity-80 group-hover:opacity-100 transition-opacity">
