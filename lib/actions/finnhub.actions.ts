@@ -149,6 +149,88 @@ export async function getNews(symbols?: string[]): Promise<MarketNewsArticle[]> 
     }
 }
 
+// Fetch 90 days of daily candles for TA calculation
+export async function getCandles(symbol: string): Promise<{
+    c: number[]; h: number[]; l: number[]; o: number[]; t: number[]; v: number[];
+} | null> {
+    const to = Math.floor(Date.now() / 1000);
+    const from = to - 90 * 24 * 60 * 60;
+    const url = `${FINNHUB_BASE_URL}/stock/candle?symbol=${encodeURIComponent(symbol)}&resolution=D&from=${from}&to=${to}&token=${NEXT_PUBLIC_FINNHUB_API_KEY}`;
+    try {
+        const data = await fetchJSON<any>(url, 3600);
+        if (data.s !== 'ok') return null;
+        return { c: data.c, h: data.h, l: data.l, o: data.o, t: data.t, v: data.v };
+    } catch {
+        return null;
+    }
+}
+
+// Fetch today's intraday candles (5-min resolution) for opening analysis
+export async function getIntradayCandles(symbol: string): Promise<{
+    c: number[]; v: number[]; t: number[];
+} | null> {
+    const now = new Date();
+    const todayStart = new Date(now);
+    todayStart.setUTCHours(13, 30, 0, 0); // 9:30 AM ET
+    const from = Math.floor(todayStart.getTime() / 1000);
+    const to = Math.floor(now.getTime() / 1000);
+    const url = `${FINNHUB_BASE_URL}/stock/candle?symbol=${encodeURIComponent(symbol)}&resolution=5&from=${from}&to=${to}&token=${NEXT_PUBLIC_FINNHUB_API_KEY}`;
+    try {
+        const data = await fetchJSON<any>(url);
+        if (data.s !== 'ok') return null;
+        return { c: data.c, v: data.v, t: data.t };
+    } catch {
+        return null;
+    }
+}
+
+// Fetch key fundamental metrics
+export async function getMetrics(symbol: string): Promise<{
+    pe: number | null;
+    epsGrowth: number | null;
+    roe: number | null;
+    week52High: number | null;
+    week52Low: number | null;
+    revenueGrowth: number | null;
+} | null> {
+    const url = `${FINNHUB_BASE_URL}/stock/metric?symbol=${encodeURIComponent(symbol)}&metric=all&token=${NEXT_PUBLIC_FINNHUB_API_KEY}`;
+    try {
+        const data = await fetchJSON<any>(url, 86400);
+        const m = data.metric ?? {};
+        return {
+            pe: m.peBasicExclExtraTTM ?? null,
+            epsGrowth: m.epsGrowth3Y ?? null,
+            roe: m.roeTTM ?? null,
+            week52High: m['52WeekHigh'] ?? null,
+            week52Low: m['52WeekLow'] ?? null,
+            revenueGrowth: m.revenueGrowth3Y ?? null,
+        };
+    } catch {
+        return null;
+    }
+}
+
+// Fetch analyst buy/sell/hold consensus
+export async function getRecommendations(symbol: string): Promise<{
+    buy: number; hold: number; sell: number; strongBuy: number; strongSell: number;
+} | null> {
+    const url = `${FINNHUB_BASE_URL}/stock/recommendation?symbol=${encodeURIComponent(symbol)}&token=${NEXT_PUBLIC_FINNHUB_API_KEY}`;
+    try {
+        const data = await fetchJSON<any>(url, 86400);
+        if (!Array.isArray(data) || data.length === 0) return null;
+        const latest = data[0];
+        return {
+            buy: latest.buy ?? 0,
+            hold: latest.hold ?? 0,
+            sell: latest.sell ?? 0,
+            strongBuy: latest.strongBuy ?? 0,
+            strongSell: latest.strongSell ?? 0,
+        };
+    } catch {
+        return null;
+    }
+}
+
 export const searchStocks = cache(async (query?: string): Promise<StockWithWatchlistStatus[]> => {
     try {
         const token = NEXT_PUBLIC_FINNHUB_API_KEY;
