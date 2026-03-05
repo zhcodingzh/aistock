@@ -2,7 +2,6 @@
 
 import { connectToDatabase } from '@/database/mongoose';
 import { Analysis } from '@/database/models/analysis.model';
-import { inngest } from '@/lib/inngest/client';
 import { getAuth } from '@/lib/better-auth/auth';
 import { headers } from 'next/headers';
 
@@ -30,13 +29,18 @@ export async function requestAnalysis(userId: string, symbol: string): Promise<v
     const session = await auth.api.getSession({ headers: await headers() });
     const user = session?.user as any;
 
-    await inngest.send({
-        name: 'app/analysis.requested',
-        data: {
+    const reqHeaders = await headers();
+    const host = reqHeaders.get('host') ?? 'localhost:3000';
+    const protocol = host.startsWith('localhost') || host.startsWith('127.') ? 'http' : 'https';
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? `${protocol}://${host}`;
+    await fetch(`${baseUrl}/api/analysis/request`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
             userId,
             symbol: symbol.toUpperCase(),
             riskTolerance: user?.riskTolerance ?? 'Medium',
             investmentGoal: user?.investmentGoals ?? 'Growth',
-        },
+        }),
     });
 }
