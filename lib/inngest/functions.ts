@@ -485,3 +485,244 @@ export const checkInactiveUsers = inngest.createFunction(
         return { processed: inactiveUsers.length, sent: results };
     }
 );
+// ─── AI Stock Analysis ───────────────────────────────────────────────────────
+
+export const analyzeAllStocks = inngest.createFunction(
+    { id: 'analyze-all-stocks', name: 'Analyze All Stocks (Daily)' },
+    { cron: 'TZ=America/New_York 50 9 * * 1-5' },
+    async ({ step }) => {
+        const { connectToDatabase } = await import('@/database/mongoose');
+        await connectToDatabase();
+
+        const mongoose = await import('mongoose');
+        const users = await step.run('fetch-users', async () => {
+            const db = mongoose.default.connection.db;
+            if (!db) return [];
+            return db.collection('user').find({}, {
+                projection: { _id: 1, investmentGoals: 1, riskTolerance: 1 }
+            }).toArray();
+        });
+
+        for (const user of users) {
+            await step.sendEvent(`trigger-user-${user._id}`, {
+                name: 'app/analysis.user.requested',
+                data: {
+                    userId: user._id.toString(),
+                    riskTolerance: (user as any).riskTolerance ?? 'Medium',
+                    investmentGoal: (user as any).investmentGoals ?? 'Growth',
+                },
+            });
+        }
+
+        return { triggered: users.length };
+    }
+);
+
+export const analyzeUserStocks = inngest.createFunction(
+    { id: 'analyze-user-stocks', name: 'Analyze Stocks For User' },
+    { event: 'app/analysis.user.requested' },
+    async ({ event, step }) => {
+        const { userId, riskTolerance, investmentGoal } = event.data as {
+            userId: string; riskTolerance: string; investmentGoal: string;
+        };
+
+        const { connectToDatabase } = await import('@/database/mongoose');
+        const { Order } = await import('@/database/models/order.model');
+        const { Watchlist } = await import('@/database/models/watchlist.model');
+        const { Analysis } = await import('@/database/models/analysis.model');
+        const { getCandles, getIntradayCandles, getMetrics, getRecommendations, getNews, getCompanyProfile, getQuote } = await import('@/lib/actions/finnhub.actions');
+        const { calculateIndicators } = await import('@/lib/trading/indicators');
+        const { calculatePosition } = await import('@/lib/trading/pnl');
+        const { STOCK_ANALYSIS_PROMPT } = await import('@/lib/inngest/prompts');
+
+        await connectToDatabase();
+        const today = new Date().toISOString().slice(0, 10);
+
+        const [orders, watchlist] = await step.run('fetch-user-data', async () => {
+            const o = await Order.find({ userId }).lean();
+            const w = await Watchlist.find({ userId }).lean();
+            return [o, w];
+        });
+
+        const positionSymbols = [...new Set((orders as any[]).map((o: any) => o.symbol))];
+        const watchlistSymbols = (watchlist as any[]).map((w: any) => w.symbol).filter((s: string) => !positionSymbols.includes(s));
+        const allSymbols = [...positionSymbols, ...watchlistSymbols];
+
+        if (allSymbols.length === 0) return { analyzed: 0 };
+
+        const quoteMap: Record<string, number> = {};
+        for (const symbol of positionSymbols) {
+            const q = await step.run(`quote-${symbol}`, () => getQuote(symbol));
+            quoteMap[symbol] = (q as any)?.c ?? 0;
+        }
+        const totalPortfolioValue = positionSymbols.reduce((sum, sym) => {
+            const ordersForSym = (orders as any[]).filter((o: any) => o.symbol === sym);
+            const pos = calculatePosition(ordersForSym, quoteMap[sym] ?? 0);
+            return sum + pos.marketValue;
+        }, 0);
+
+        for (const symbol of allSymbols) {
+            const existing = await step.run(`check-existing-${symbol}`, () =>
+                Analysis.findOne({ userId, symbol, date: today, generatedBy: 'manual' }).lean()
+            );
+            if (existing) continue;
+
+            const [candles, intradayCandles, metrics, recommendations, news, profile, quote] = await step.run(`fetch-data-${symbol}`, async () => {
+                return Promise.all([
+                    getCandles(symbol),
+                    getIntradayCandles(symbol),
+                    getMetrics(symbol),
+                    getRecommendations(symbol),
+                    getNews([symbol]),
+                    getCompanyProfile(symbol),
+                    getQuote(symbol),
+                ]);
+            });
+
+            if (!candles || (candles as any).c.length < 30) continue;
+
+            const signals = calculateIndicators(
+                (candles as any).c, (candles as any).v,
+                (intradayCandles as any)?.c ?? [],
+                (intradayCandles as any)?.v ?? []
+            );
+
+            const isPosition = positionSymbols.includes(symbol);
+            const symbolOrders = (orders as any[]).filter((o: any) => o.symbol === symbol);
+            const currentPrice = (quote as any)?.c ?? (candles as any).c[(candles as any).c.length - 1];
+            const position = isPosition ? calculatePosition(symbolOrders, currentPrice) : null;
+            const positionWeight = position && totalPortfolioValue > 0
+                ? (position.marketValue / totalPortfolioValue) * 100 : 0;
+            const unrealizedPnlPct = position && position.avgCost > 0
+                ? ((currentPrice - position.avgCost) / position.avgCost) * 100 : 0;
+
+            const prompt = STOCK_ANALYSIS_PROMPT({
+                symbol,
+                companyName: (profile as any)?.name ?? symbol,
+                currentPrice,
+                signals,
+                metrics: metrics as any,
+                recommendations: recommendations as any,
+                newsHeadlines: ((news ?? []) as any[]).slice(0, 5).map((n: any) => n.headline ?? ''),
+                hasPosition: isPosition,
+                sharesHeld: position?.sharesHeld ?? 0,
+                avgCost: position?.avgCost ?? 0,
+                unrealizedPnlPct,
+                positionWeight,
+                riskTolerance,
+                investmentGoal,
+            });
+
+            const aiResponse = await step.ai.infer(`analyze-${symbol}`, {
+                model: step.ai.models.gemini({ model: 'gemini-2.5-flash-lite' }),
+                body: { contents: [{ role: 'user', parts: [{ text: prompt }] }] },
+            });
+
+            let parsed: any = null;
+            try {
+                const rawText = (aiResponse as any).candidates?.[0]?.content?.parts?.[0]?.text ?? '';
+                const clean = rawText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+                parsed = JSON.parse(clean);
+            } catch {
+                continue;
+            }
+
+            await step.run(`save-${symbol}`, () =>
+                Analysis.findOneAndUpdate(
+                    { userId, symbol, date: today },
+                    { ...parsed, symbol, date: today, userId, positionWeight, generatedBy: 'scheduled' },
+                    { upsert: true, new: true }
+                )
+            );
+        }
+
+        return { analyzed: allSymbols.length };
+    }
+);
+
+export const analyzeStockOnDemand = inngest.createFunction(
+    { id: 'analyze-stock-on-demand', name: 'Analyze Stock On Demand' },
+    { event: 'app/analysis.requested' },
+    async ({ event, step }) => {
+        const { userId, symbol, riskTolerance, investmentGoal } = event.data as {
+            userId: string; symbol: string; riskTolerance: string; investmentGoal: string;
+        };
+
+        const { connectToDatabase } = await import('@/database/mongoose');
+        const { Order } = await import('@/database/models/order.model');
+        const { Analysis } = await import('@/database/models/analysis.model');
+        const { getCandles, getIntradayCandles, getMetrics, getRecommendations, getNews, getCompanyProfile, getQuote } = await import('@/lib/actions/finnhub.actions');
+        const { calculateIndicators } = await import('@/lib/trading/indicators');
+        const { calculatePosition } = await import('@/lib/trading/pnl');
+        const { STOCK_ANALYSIS_PROMPT } = await import('@/lib/inngest/prompts');
+
+        await connectToDatabase();
+        const today = new Date().toISOString().slice(0, 10);
+
+        const [candles, intradayCandles, metrics, recommendations, news, profile, quote, orders] = await step.run('fetch-all', async () => {
+            return Promise.all([
+                getCandles(symbol),
+                getIntradayCandles(symbol),
+                getMetrics(symbol),
+                getRecommendations(symbol),
+                getNews([symbol]),
+                getCompanyProfile(symbol),
+                getQuote(symbol),
+                Order.find({ userId, symbol }).lean(),
+            ]);
+        });
+
+        if (!candles || (candles as any).c.length < 30) return { error: 'Insufficient data' };
+
+        const signals = calculateIndicators(
+            (candles as any).c, (candles as any).v,
+            (intradayCandles as any)?.c ?? [],
+            (intradayCandles as any)?.v ?? []
+        );
+        const currentPrice = (quote as any)?.c ?? (candles as any).c[(candles as any).c.length - 1];
+        const position = (orders as any[]).length > 0 ? calculatePosition(orders as any[], currentPrice) : null;
+        const unrealizedPnlPct = position && position.avgCost > 0
+            ? ((currentPrice - position.avgCost) / position.avgCost) * 100 : 0;
+
+        const prompt = STOCK_ANALYSIS_PROMPT({
+            symbol,
+            companyName: (profile as any)?.name ?? symbol,
+            currentPrice,
+            signals,
+            metrics: metrics as any,
+            recommendations: recommendations as any,
+            newsHeadlines: ((news ?? []) as any[]).slice(0, 5).map((n: any) => n.headline ?? ''),
+            hasPosition: (orders as any[]).length > 0,
+            sharesHeld: position?.sharesHeld ?? 0,
+            avgCost: position?.avgCost ?? 0,
+            unrealizedPnlPct,
+            positionWeight: 0,
+            riskTolerance,
+            investmentGoal,
+        });
+
+        const aiResponse = await step.ai.infer('analyze-on-demand', {
+            model: step.ai.models.gemini({ model: 'gemini-2.5-flash-lite' }),
+            body: { contents: [{ role: 'user', parts: [{ text: prompt }] }] },
+        });
+
+        let parsed: any = null;
+        try {
+            const rawText = (aiResponse as any).candidates?.[0]?.content?.parts?.[0]?.text ?? '';
+            const clean = rawText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+            parsed = JSON.parse(clean);
+        } catch {
+            return { error: 'AI parse failed' };
+        }
+
+        await step.run('save', () =>
+            Analysis.findOneAndUpdate(
+                { userId, symbol, date: today },
+                { ...parsed, symbol, date: today, userId, positionWeight: 0, generatedBy: 'manual' },
+                { upsert: true, new: true }
+            )
+        );
+
+        return { success: true, signal: parsed.signal };
+    }
+);

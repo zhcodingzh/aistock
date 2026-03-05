@@ -198,6 +198,77 @@ Apple Stock Jumped After Great Earnings Report
 </div>
 </div>`
 
+export const STOCK_ANALYSIS_PROMPT = (params: {
+    symbol: string;
+    companyName: string;
+    currentPrice: number;
+    signals: import('@/lib/trading/indicators').TechnicalSignals;
+    metrics: { pe: number | null; epsGrowth: number | null; roe: number | null; week52High: number | null; week52Low: number | null; revenueGrowth: number | null } | null;
+    recommendations: { buy: number; hold: number; sell: number; strongBuy: number; strongSell: number } | null;
+    newsHeadlines: string[];
+    // Personal context
+    hasPosition: boolean;
+    sharesHeld: number;
+    avgCost: number;
+    unrealizedPnlPct: number;
+    positionWeight: number;
+    riskTolerance: string;
+    investmentGoal: string;
+}) => {
+    const ta = params.signals;
+    const m = params.metrics;
+    const rec = params.recommendations;
+
+    return `You are a professional stock analyst. Analyze ${params.symbol} (${params.companyName}) and provide a structured JSON response.
+
+MARKET DATA:
+- Current Price: $${params.currentPrice}
+- RSI(14): ${ta.rsi?.toFixed(1) ?? 'N/A'} (${ta.rsiSignal})
+- MACD: ${ta.macdSignal}${ta.macdHistogram ? ` (histogram: ${ta.macdHistogram.toFixed(3)})` : ''}
+- Price vs MA20: ${ta.priceVsMa20} | MA50: ${ta.priceVsMa50} | MA200: ${ta.priceVsMa200}
+- Bollinger Band position: ${ta.bbPosition}
+${ta.todayGapPct !== null ? `- Today's opening gap: ${ta.todayGapPct > 0 ? '+' : ''}${ta.todayGapPct.toFixed(2)}%` : ''}
+${ta.todayVolRatio !== null ? `- Today's volume ratio vs 20-day avg: ${ta.todayVolRatio.toFixed(2)}x` : ''}
+
+FUNDAMENTALS:
+${m ? `- P/E Ratio: ${m.pe?.toFixed(1) ?? 'N/A'}
+- EPS Growth (3Y): ${m.epsGrowth?.toFixed(1) ?? 'N/A'}%
+- ROE: ${m.roe?.toFixed(1) ?? 'N/A'}%
+- 52-Week Range: $${m.week52Low?.toFixed(2) ?? 'N/A'} - $${m.week52High?.toFixed(2) ?? 'N/A'}
+- Revenue Growth (3Y): ${m.revenueGrowth?.toFixed(1) ?? 'N/A'}%` : 'Fundamentals data unavailable.'}
+
+ANALYST CONSENSUS:
+${rec ? `Strong Buy: ${rec.strongBuy} | Buy: ${rec.buy} | Hold: ${rec.hold} | Sell: ${rec.sell} | Strong Sell: ${rec.strongSell}` : 'N/A'}
+
+RECENT NEWS (last 7 days):
+${params.newsHeadlines.slice(0, 5).map((h, i) => `${i + 1}. ${h}`).join('\n') || 'No recent news.'}
+
+USER CONTEXT:
+${params.hasPosition
+    ? `- Holds ${params.sharesHeld} shares at avg cost $${params.avgCost.toFixed(2)} (unrealized P&L: ${params.unrealizedPnlPct > 0 ? '+' : ''}${params.unrealizedPnlPct.toFixed(1)}%)
+- Position weight in portfolio: ${params.positionWeight.toFixed(1)}%`
+    : '- No current position (watchlist only)'}
+- Risk tolerance: ${params.riskTolerance || 'Medium'}
+- Investment goal: ${params.investmentGoal || 'Growth'}
+
+Respond ONLY with valid JSON (no markdown, no explanation):
+{
+  "signal": "BUY" | "SELL" | "HOLD",
+  "confidence": "HIGH" | "MEDIUM" | "LOW",
+  "oneWeekOutlook": "string (2-3 sentences about next week)",
+  "threeMonthOutlook": "string (2-3 sentences about next 3 months)",
+  "technicalSummary": "string (2-3 sentences summarizing technical picture)",
+  "fundamentalSummary": "string (2-3 sentences on fundamentals and analyst view)",
+  "newsSentiment": "POSITIVE" | "NEUTRAL" | "NEGATIVE",
+  "newsSummary": "string (1-2 sentences on news impact)",
+  "riskWarning": "string (1-2 sentences on key risks)",
+  "targetPrice": number | null,
+  "stopLoss": number | null,
+  "personalAdvice": "string (2-3 sentences specific to this user's position/situation)",
+  "action": "ADD" | "REDUCE" | "CLOSE" | "HOLD" | "BUY_NEW" | "WATCH"
+}`;
+};
+
 export const TRADINGVIEW_SYMBOL_MAPPING_PROMPT = `You are an expert in financial markets and trading platforms. Your task is to find the correct TradingView symbol that corresponds to a given Finnhub stock symbol.
 
 Stock information from Finnhub:
