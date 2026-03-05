@@ -5,7 +5,7 @@ import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { getUserWatchlist } from '@/lib/actions/watchlist.actions';
 import { getUserAlerts } from '@/lib/actions/alert.actions';
-import { getNews } from '@/lib/actions/finnhub.actions';
+import { getNews, getWatchlistData } from '@/lib/actions/finnhub.actions';
 import { getPortfolioAnalysisSummary } from '@/lib/actions/analysis.actions';
 import WatchlistManager from '@/components/watchlist/WatchlistManager';
 import AlertsPanel from '@/components/watchlist/AlertsPanel';
@@ -31,10 +31,11 @@ export default async function WatchlistPage() {
         getNews(),
         getPortfolioAnalysisSummary(userId),
     ]);
-    const analysisMap: Record<string, AnalysisRecord> = {};
-    for (const a of analyses) analysisMap[a.symbol] = a;
 
     const watchlistSymbols = watchlistItems.map((item: any) => item.symbol);
+    const priceData = watchlistSymbols.length > 0 ? await getWatchlistData(watchlistSymbols) : [];
+    const analysisMap: Record<string, AnalysisRecord> = {};
+    for (const a of analyses) analysisMap[a.symbol] = a;
 
     // Fallback news if watchlist has items
     const relevantNews = watchlistSymbols.length > 0 ? await getNews(watchlistSymbols) : news;
@@ -58,7 +59,7 @@ export default async function WatchlistPage() {
                 {/* Main Content - Watchlist Table */}
                 <div className="lg:col-span-3 space-y-8">
                     <div className="space-y-6">
-                        <WatchlistManager initialItems={watchlistItems} userId={userId} analysisMap={analysisMap} />
+                        <WatchlistManager initialItems={watchlistItems} userId={userId} analysisMap={analysisMap} initialPriceData={priceData} />
                     </div>
 
                     {/* News Section */}

@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import WatchlistStockChip from './WatchlistStockChip';
-import TradingViewWatchlist from './TradingViewWatchlist';
+import WatchlistTable from './WatchlistTable';
 import AnalysisCard from '@/components/analysis/AnalysisCard';
 import { Button } from '@/components/ui/button';
 import { ArrowDownAZ, ArrowUpZA, ArrowUpDown } from 'lucide-react';
@@ -13,9 +13,10 @@ interface WatchlistManagerProps {
     initialItems: WatchlistItem[];
     userId: string;
     analysisMap?: Record<string, AnalysisRecord>;
+    initialPriceData?: any[];
 }
 
-export default function WatchlistManager({ initialItems, userId, analysisMap }: WatchlistManagerProps) {
+export default function WatchlistManager({ initialItems, userId, analysisMap, initialPriceData = [] }: WatchlistManagerProps) {
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc' | null>(null);
     const { t } = useTranslation();
 
@@ -64,25 +65,19 @@ export default function WatchlistManager({ initialItems, userId, analysisMap }: 
                     <p className="text-sm text-gray-500 italic">{t('no_stocks')}</p>
                 )}
             </div>
-            {analysisMap && watchlistSymbols.length > 0 && (
-                <div className="space-y-2">
-                    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{t('ai_analysis_title')}</h3>
-                    <div className="flex flex-wrap gap-2">
-                        {sortedItems.map((item) => (
-                            <AnalysisCard
-                                key={item.symbol}
-                                userId={userId}
-                                symbol={item.symbol}
-                                analysis={analysisMap[item.symbol] ?? null}
-                                compact
-                            />
-                        ))}
-                    </div>
-                </div>
-            )}
-            <div className="min-h-[550px]">
-                <TradingViewWatchlist symbols={watchlistSymbols} />
-            </div>
+            <WatchlistTable
+                data={initialPriceData.length > 0 ? initialPriceData : sortedItems.map(item => ({
+                    symbol: item.symbol,
+                    name: item.company,
+                    price: 0,
+                    change: 0,
+                    changePercent: 0,
+                    logo: null,
+                    marketCap: null,
+                }))}
+                userId={userId}
+                analysisMap={analysisMap}
+            />
         </div>
     );
 }
