@@ -4,6 +4,7 @@ import { connectToDatabase } from '@/database/mongoose';
 import { Analysis } from '@/database/models/analysis.model';
 import { getAuth } from '@/lib/better-auth/auth';
 import { headers } from 'next/headers';
+import { runStockAnalysis } from '@/lib/trading/analyzeStock';
 
 function today(): string {
     return new Date().toISOString().slice(0, 10);
@@ -29,18 +30,14 @@ export async function requestAnalysis(userId: string, symbol: string): Promise<v
     const session = await auth.api.getSession({ headers: await headers() });
     const user = session?.user as any;
 
-    const reqHeaders = await headers();
-    const host = reqHeaders.get('host') ?? 'localhost:3000';
-    const protocol = host.startsWith('localhost') || host.startsWith('127.') ? 'http' : 'https';
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? `${protocol}://${host}`;
-    await fetch(`${baseUrl}/api/analysis/request`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            userId,
-            symbol: symbol.toUpperCase(),
-            riskTolerance: user?.riskTolerance ?? 'Medium',
-            investmentGoal: user?.investmentGoals ?? 'Growth',
-        }),
+    const sym = symbol.toUpperCase();
+    const riskTolerance = user?.riskTolerance ?? 'Medium';
+    const investmentGoal = user?.investmentGoals ?? 'Growth';
+
+    // Fire-and-forget: 直接在 Node.js 事件循环中运行，不阻塞 server action 返回
+    setImmediate(() => {
+        runStockAnalysis({ userId, symbol: sym, riskTolerance, investmentGoal })
+            .then(r => console.log(`[analysis] ${sym} done:`, r.signal ?? r.error))
+            .catch(err => console.error(`[analysis] ${sym} error:`, err));
     });
 }

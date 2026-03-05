@@ -1,4 +1,3 @@
-import { after } from 'next/server';
 import { runStockAnalysis } from '@/lib/trading/analyzeStock';
 
 export async function POST(request: Request) {
@@ -8,14 +7,14 @@ export async function POST(request: Request) {
         return Response.json({ error: 'Missing userId or symbol' }, { status: 400 });
     }
 
-    // Respond immediately, run analysis in background after response is sent
-    after(async () => {
-        try {
-            await runStockAnalysis({ userId, symbol, riskTolerance, investmentGoal });
-        } catch (err) {
-            console.error(`[analysis] Failed for ${symbol}:`, err);
-        }
-    });
+    console.log(`[analysis] Starting analysis for ${symbol} (user: ${userId})`);
 
-    return Response.json({ queued: true });
+    try {
+        const result = await runStockAnalysis({ userId, symbol, riskTolerance, investmentGoal });
+        console.log(`[analysis] Done for ${symbol}:`, result);
+        return Response.json(result);
+    } catch (err) {
+        console.error(`[analysis] Failed for ${symbol}:`, err);
+        return Response.json({ success: false, error: String(err) }, { status: 500 });
+    }
 }
