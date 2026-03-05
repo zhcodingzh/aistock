@@ -216,6 +216,35 @@ declare global {
         changePercent?: number;
     };
 
+    // AI Analysis
+    type AnalysisSignal = 'BUY' | 'SELL' | 'HOLD';
+    type AnalysisConfidence = 'HIGH' | 'MEDIUM' | 'LOW';
+    type AnalysisAction = 'ADD' | 'REDUCE' | 'CLOSE' | 'HOLD' | 'BUY_NEW' | 'WATCH';
+    type NewsSentiment = 'POSITIVE' | 'NEUTRAL' | 'NEGATIVE';
+
+    type AnalysisRecord = {
+        _id: string;
+        symbol: string;
+        date: string;
+        signal: AnalysisSignal;
+        confidence: AnalysisConfidence;
+        oneWeekOutlook: string;
+        threeMonthOutlook: string;
+        technicalSummary: string;
+        fundamentalSummary: string;
+        newsSentiment: NewsSentiment;
+        newsSummary: string;
+        riskWarning: string;
+        targetPrice: number | null;
+        stopLoss: number | null;
+        userId: string;
+        personalAdvice: string;
+        positionWeight: number;
+        action: AnalysisAction;
+        generatedBy: 'scheduled' | 'manual';
+        updatedAt: string;
+    };
+
     // Trading Orders
     type OrderType = 'BUY' | 'SELL';
 
