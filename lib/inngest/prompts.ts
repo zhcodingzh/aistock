@@ -214,12 +214,19 @@ export const STOCK_ANALYSIS_PROMPT = (params: {
     positionWeight: number;
     riskTolerance: string;
     investmentGoal: string;
+    locale?: string;
 }) => {
     const ta = params.signals;
     const m = params.metrics;
     const rec = params.recommendations;
+    const isChinese = params.locale === 'zh';
+    const langInstruction = isChinese
+        ? 'All string fields in your JSON response MUST be written in Simplified Chinese (简体中文).'
+        : 'All string fields in your JSON response must be written in English.';
 
     return `You are a professional stock analyst. Analyze ${params.symbol} (${params.companyName}) and provide a structured JSON response.
+
+LANGUAGE REQUIREMENT: ${langInstruction}
 
 MARKET DATA:
 - Current Price: $${params.currentPrice}

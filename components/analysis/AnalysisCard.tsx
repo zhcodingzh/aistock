@@ -36,7 +36,7 @@ const ACTION_LABELS_KEY: Record<AnalysisAction, string> = {
 };
 
 export default function AnalysisCard({ userId, symbol, analysis, compact = false }: AnalysisCardProps) {
-    const { t } = useTranslation();
+    const { t, locale } = useTranslation();
     const [expanded, setExpanded] = useState(false);
     const [isPending, startTransition] = useTransition();
     const [localAnalysis, setLocalAnalysis] = useState<AnalysisRecord | null>(analysis);
@@ -44,7 +44,7 @@ export default function AnalysisCard({ userId, symbol, analysis, compact = false
     const handleRefresh = () => {
         startTransition(async () => {
             try {
-                await requestAnalysis(userId, symbol);
+                await requestAnalysis(userId, symbol, locale);
                 toast.success(t('ai_refreshing'));
                 // Poll for result after 15 seconds
                 setTimeout(async () => {

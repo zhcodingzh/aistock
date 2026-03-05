@@ -1,7 +1,7 @@
 import { runStockAnalysis } from '@/lib/trading/analyzeStock';
 
 export async function POST(request: Request) {
-    const { userId, symbol, riskTolerance, investmentGoal } = await request.json();
+    const { userId, symbol, riskTolerance, investmentGoal, locale = 'en' } = await request.json();
 
     if (!userId || !symbol) {
         return Response.json({ error: 'Missing userId or symbol' }, { status: 400 });
@@ -10,7 +10,7 @@ export async function POST(request: Request) {
     console.log(`[analysis] Starting analysis for ${symbol} (user: ${userId})`);
 
     try {
-        const result = await runStockAnalysis({ userId, symbol, riskTolerance, investmentGoal });
+        const result = await runStockAnalysis({ userId, symbol, riskTolerance, investmentGoal, locale });
         console.log(`[analysis] Done for ${symbol}:`, result);
         return Response.json(result);
     } catch (err) {

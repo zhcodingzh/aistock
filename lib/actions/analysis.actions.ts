@@ -25,7 +25,7 @@ export async function getPortfolioAnalysisSummary(userId: string): Promise<Analy
     return JSON.parse(JSON.stringify(docs));
 }
 
-export async function requestAnalysis(userId: string, symbol: string): Promise<void> {
+export async function requestAnalysis(userId: string, symbol: string, locale: string = 'en'): Promise<void> {
     const auth = await getAuth();
     const session = await auth.api.getSession({ headers: await headers() });
     const user = session?.user as any;
@@ -36,7 +36,7 @@ export async function requestAnalysis(userId: string, symbol: string): Promise<v
 
     // Fire-and-forget: 直接在 Node.js 事件循环中运行，不阻塞 server action 返回
     setImmediate(() => {
-        runStockAnalysis({ userId, symbol: sym, riskTolerance, investmentGoal })
+        runStockAnalysis({ userId, symbol: sym, riskTolerance, investmentGoal, locale })
             .then(r => console.log(`[analysis] ${sym} done:`, r.signal ?? r.error))
             .catch(err => console.error(`[analysis] ${sym} error:`, err));
     });

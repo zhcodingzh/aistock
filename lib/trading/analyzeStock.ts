@@ -55,8 +55,9 @@ export async function runStockAnalysis(params: {
     symbol: string;
     riskTolerance: string;
     investmentGoal: string;
+    locale?: string;
 }): Promise<{ success: boolean; signal?: string; error?: string }> {
-    const { userId, symbol, riskTolerance, investmentGoal } = params;
+    const { userId, symbol, riskTolerance, investmentGoal, locale = 'en' } = params;
 
     await connectToDatabase();
     const today = new Date().toISOString().slice(0, 10);
@@ -104,6 +105,7 @@ export async function runStockAnalysis(params: {
         positionWeight: 0,
         riskTolerance,
         investmentGoal,
+        locale,
     });
 
     // Call Gemini directly via REST (no Inngest step.ai.infer needed)
